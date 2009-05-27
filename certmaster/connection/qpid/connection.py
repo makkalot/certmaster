@@ -22,7 +22,7 @@ class QpidConnection(object):
     A simple Qpid connection
     """
     
-    def __init__(self,broker=None,broker_port=None,broker_user=None,broker_pass=None):
+    def __init__(self,broker=None,broker_port=None,broker_user=None,broker_pass=None,*args,**kwargs):
         self.broker = broker or BROKER
         self.broker_port = broker_port or BROKER_PORT
         self.broker_user = broker_user or BROKER_USER
@@ -67,14 +67,7 @@ class BaseQpidCertmasterServer(QpidConnection):
     def __init__(self,*args,**kwargs):
         super(BaseQpidCertmasterServer,self).__init__(*args,**kwargs)
 
-    def pre_server_hook(self,*args,**kwargs):
-        """
-        That hook method will be called before server method
-        if you want to customize the stuff of the server that is 
-        the place
-        """
-        pass
-
+    
     def serve(self):
         self.session.queue_declare(queue=self.QUEUE_NAME, exclusive=True)
         self.session.exchange_bind(exchange="amq.direct", queue=self.QUEUE_NAME, binding_key=self.BINDING_KEY)

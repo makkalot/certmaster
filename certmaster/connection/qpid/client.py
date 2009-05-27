@@ -16,10 +16,32 @@ class LineSender(BaseQpidCertmasterClient):
         return " processed ! "+str(result) 
 
 
+class RpcSender(BaseQpidCertmasterClient):
+    pass
+
 
 if __name__ == "__main__":
-    l=LineSender()
+    #l=LineSender()
     
-    for i in ["One","Two","Three","Four","Five"]:
-        tmp_res = l.send_data(i,"certmaster_%s"%utils.get_host(),True)
-        print "THE returning final result is like ",tmp_res
+    #for i in ["One","Two","Three","Four","Five"]:
+    #    tmp_res = l.send_data(i,"certmaster_%s"%utils.get_host(),True)
+    #    print "THE returning final result is like ",tmp_res
+    r =RpcSender()
+    tmp_dict = {
+            
+            'callable_method':'echo_int',
+            'callable_module':'callme',
+            'args':[]
+            }
+
+    print "The result from CallMe.echo_int is ",r.send_data(tmp_dict,"certmaster_%s"%utils.get_host(),True)
+    
+    tmp_dict = {
+            
+            'callable_method':'message',
+            'callable_module':'system',
+            'args':[100]
+            }
+
+
+    print "The result from CallMe.echo_int is ",r.send_data(tmp_dict,"certmaster_%s"%utils.get_host(),True)
