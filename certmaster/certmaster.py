@@ -15,7 +15,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 """
 
 # standard modules
-import SimpleXMLRPCServer
 import string
 import sys
 import traceback
@@ -36,15 +35,14 @@ import logger
 from config import read_config
 from commonconfig import CMConfig
 
-CERTMASTER_LISTEN_PORT = 51235
-CERTMASTER_CONFIG = "/etc/certmaster/certmaster.conf"
-
 class CertMaster(object):
-    def __init__(self, conf_file=CERTMASTER_CONFIG):
+    def __init__(self, conf_file=CERTMASTER_CONFIG,connection_handler=None):
         self.cfg = read_config(conf_file, CMConfig)
+        #sometimes we need a reference of the connection_handler obj
+        self.__connection_handler = connection_handler
 
         usename = utils.get_hostname(talk_to_certmaster=False)
-
+        
         mycn = '%s-CA-KEY' % usename
         self.ca_key_file = '%s/certmaster.key' % self.cfg.cadir
         self.ca_cert_file = '%s/certmaster.crt' % self.cfg.cadir
@@ -70,22 +68,16 @@ class CertMaster(object):
             if not os.path.exists(dirpath):
                 os.makedirs(dirpath)
 
-        # setup handlers
-        self.handlers = {
-                 'wait_for_cert': self.wait_for_cert,
-                 }
-
+        # normally you would set Up the handlers here
+        # but we remove that piece of code to somwhere else
         
+               
     def _dispatch(self, method, params):
-        if method == 'trait_names' or method == '_getAttributeNames':
-            return self.handlers.keys()
-
-
-        if method in self.handlers.keys():
-            return self.handlers[method](*params)
-        else:
-            self.logger.info("Unhandled method call for method: %s " % method)
-            raise codes.InvalidMethodException
+        """
+        Here you put the code that handles the calling operation
+        """
+        return self.__connection_handler.handle_method_call(method,params)
+        
     
     def _sanitize_cn(self, commonname):
         commonname = commonname.replace('/', '')
@@ -307,31 +299,6 @@ class CertMaster(object):
         return utils.run_triggers(ref, globber)
 
 
-class CertmasterXMLRPCServer(SimpleXMLRPCServer.SimpleXMLRPCServer):
-    def __init__(self, addr):
-        self.allow_reuse_address = True
-        SimpleXMLRPCServer.SimpleXMLRPCServer.__init__(self, addr)
-        
-
-def serve(xmlrpcinstance):
-
-    """
-    Code for starting the XMLRPC service.
-    """
-
-
-    config = read_config(CERTMASTER_CONFIG, CMConfig)
-    listen_addr = config.listen_addr
-    listen_port = config.listen_port
-    if listen_port == '':
-        listen_port = CERTMASTER_LISTEN_PORT 
-    server = CertmasterXMLRPCServer((listen_addr,listen_port))
-    server.logRequests = 0 # don't print stuff to console
-    server.register_instance(xmlrpcinstance)
-    xmlrpcinstance.logger.info("certmaster started")
-    xmlrpcinstance.audit_logger.logger.info("certmaster started")
-    server.serve_forever()
-
 def excepthook(exctype, value, tracebackobj):
     exctype_blurb = "Exception occured: %s" % exctype
     excvalue_blurb = "Exception value: %s" % value
@@ -348,18 +315,15 @@ def excepthook(exctype, value, tracebackobj):
 
 
 def main(argv):
-   
     sys.excepthook = excepthook  
-    cm = CertMaster('/etc/certmaster/certmaster.conf')
-
     if "daemon" in argv or "--daemon" in argv:
         utils.daemonize("/var/run/certmaster.pid")
     else:
         print "serving...\n"
 
-
+    connection_handler = choose_current_connection()
     # just let exceptions bubble up for now
-    serve(cm)
+    connection_handler.start_serving()
 
  
 if __name__ == "__main__":
