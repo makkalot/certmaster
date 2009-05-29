@@ -35,6 +35,7 @@ import logger
 from config import read_config
 from commonconfig import CMConfig
 
+CERTMASTER_CONFIG = "/etc/certmaster/certmaster.conf"
 class CertMaster(object):
     def __init__(self, conf_file=CERTMASTER_CONFIG,connection_handler=None):
         self.cfg = read_config(conf_file, CMConfig)
@@ -67,17 +68,36 @@ class CertMaster(object):
         for dirpath in [self.cfg.cadir, self.cfg.certroot, self.cfg.csrroot]:
             if not os.path.exists(dirpath):
                 os.makedirs(dirpath)
-
-        # normally you would set Up the handlers here
-        # but we remove that piece of code to somwhere else
         
+        #load the modules to be called ...
+        self.handlers={
+                 'wait_for_cert': self.wait_for_cert,
+                 }
                
     def _dispatch(self, method, params):
         """
         Here you put the code that handles the calling operation
         """
-        return self.__connection_handler.handle_method_call(method,params)
+        return self.handle_method_call(method,params)
+    
+    def handle_method_call(self,method,params):
         
+        #some connection manager may need diffrenet handles of the method params ...
+        res = self.__connection_handler.pre_handle_method_call(method,params)
+        if res:
+            return res
+
+        if method == 'trait_names' or method == '_getAttributeNames':
+            return self.handlers.keys()
+
+
+        if method in self.handlers.keys():
+            self.logger.info("Method call to method %s with params %s "%(method,str(params)))
+            return self.handlers[method](*params)
+        else:
+            self.logger.info("Unhandled method call for method: %s " % method)
+            raise codes.InvalidMethodException
+
     
     def _sanitize_cn(self, commonname):
         commonname = commonname.replace('/', '')
@@ -297,6 +317,13 @@ class CertMaster(object):
 
     def _run_triggers(self, ref, globber):
         return utils.run_triggers(ref, globber)
+    
+
+    def set_chandler(self,conn_handler):
+        """
+        Setting the reference of connection handler
+        """
+        self.__connection_handler = conn_handler
 
 
 def excepthook(exctype, value, tracebackobj):
@@ -315,6 +342,8 @@ def excepthook(exctype, value, tracebackobj):
 
 
 def main(argv):
+    from certmaster.connection.common import choose_current_connection
+
     sys.excepthook = excepthook  
     if "daemon" in argv or "--daemon" in argv:
         utils.daemonize("/var/run/certmaster.pid")
