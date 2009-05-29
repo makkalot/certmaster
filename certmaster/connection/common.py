@@ -28,7 +28,15 @@ class ConnectionInterface(object):
         """
         pass
 
-
+class ClientInterface(object): 
+    
+    def __init__(self,*args,**kwargs):
+        """
+        The init stuff comes here
+        """
+        self.logger = logger.Logger().logger
+        self.audit_logger = logger.AuditLogger()
+    
 
 class QpidConnection(ConnectionInterface):
     pass
@@ -63,6 +71,33 @@ def choose_current_connection(conf_file=None,force_connection=None,cm_instance=N
         return XmlRpcConnection()
     elif connection == "qpid":
         return XmlRpcConnection()
+
+    return None
+
+
+def choose_current_client(conf_file=None,master_uri=None,force_connection=None):
+    """
+    Same as above but for client
+    """
+    from certmaster.connection.xmlrpc.connection import XmlRpcClient
+
+    if not conf_file:
+        config = read_config(CERTMASTER_CONFIG, CMConfig)
+    else:
+        config = read_config(conf_file, CMConfig)
+    
+    #sometimes you may need passing the connection yourself
+    if force_connection:
+        return force_connection(master_uri=master_uri)
+
+    connection = config.connection
+    if not connection:
+        connection = "xmlrpc"
+
+    if connection == "xmlrpc":
+        return XmlRpcClient(master_uri=master_uri)
+    elif connection == "qpid":
+        return XmlRpcClient(master_uri=master_uri)
 
     return None
 
