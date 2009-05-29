@@ -1,47 +1,56 @@
 from connection import BaseQpidCertmasterClient
 import utils
 
-class LineSender(BaseQpidCertmasterClient):
+class QpidRpcClient(BaseQpidCertmasterClient):
+    """
+    The qpid client that sends commands via broker to server
+    """
 
-    def send_custom_request(self,data,*args,**kwargs):
-        """
-        Here will append a newline to every new one
-        """
-        return str(data)+" line "
-
-    def process_custom_result(self,result,*args,**kwargs):
-        """
-        Here will add the stuff
-        """
-        return " processed ! "+str(result) 
-
-
-class RpcSender(BaseQpidCertmasterClient):
-    pass
-
-
-if __name__ == "__main__":
-    #l=LineSender()
+    def __init__(self,*args,**kwargs):
+        super(QpidRpcClient,self).__init__(*args,**kwargs)
+        self.server_queue = kwargs.get('queue',None)
     
-    #for i in ["One","Two","Three","Four","Five"]:
-    #    tmp_res = l.send_data(i,"certmaster_%s"%utils.get_host(),True)
-    #    print "THE returning final result is like ",tmp_res
-    r =RpcSender()
-    tmp_dict = {
-            
-            'callable_method':'echo_int',
-            'callable_module':'callme',
-            'args':[]
-            }
-
-    print "The result from CallMe.echo_int is ",r.send_data(tmp_dict,"certmaster_%s"%utils.get_host(),True)
+    def __getattr__(self,name):
+        """
+        Most of te time we will call stuff that is
+        not there actually ..
+        """
+        return self.__CommandAutomagic(self,[name])
     
-    tmp_dict = {
+
+    
+    class __CommandAutomagic(object):
+        """
+        This allows a client object to act as if it were one machine, when in
+        reality it represents many.
+        """
+
+        def __init__(self, clientref, base):
+            self.base = base
+            self.clientref = clientref
+
+        def __getattr__(self,name):
+            base2 = self.base[:]
+            base2.append(name)
+            return __CommandAutomagic(self.clientref, base2)
+
+        def __call__(self, *args):
+            if not self.base:
+                raise AttributeError("something wrong here")
+            if len(self.base) < 2:
+                raise AttributeError("no method called: %s" % ".".join(self.base))
             
-            'callable_method':'message',
-            'callable_module':'system',
-            'args':[100]
-            }
+            module = self.base[0]
+            method = ".".join(self.base[1:])
+        
+        #send the actual data there
+        return self.clientref.send_data(
+                {
+                    'module':module,
+                    'method':method,
+                    'args':args
+                    },
+                self.clientref.server_queue,
+                return_result = True
+                )
 
-
-    print "The result from CallMe.echo_int is ",r.send_data(tmp_dict,"certmaster_%s"%utils.get_host(),True)
