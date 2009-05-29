@@ -69,6 +69,9 @@ def message(number):
         return "Odd Number"
 
 
+class QpidRpcCertMaster(ConnectionInterface):
+    pass
+
 
 
 if __name__ == "__main__":
