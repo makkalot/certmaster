@@ -5,7 +5,7 @@ from certmaster.commonconfig import CMConfig
 from certmaster.commonconfig import CMConfig
 
 from certmaster.certmaster import CertMaster
-from certmaster.connection.common  import ConnectionInterface
+from certmaster.connection.common  import ConnectionInterface,ClientInterface
 
 CERTMASTER_LISTEN_PORT = 51235
 CERTMASTER_CONFIG = "/etc/certmaster/certmaster.conf"
@@ -93,3 +93,20 @@ class XmlRpcConnection(ConnectionInterface):
         #start serving 
         self.certmaster.logger.info("certmaster xmlrpc server serving")
         self.__server_instance.serve_forever()
+
+import xmlrpclib
+class XmlRpcClient(ClientInterface):
+    """
+    Client XmlRpcSender
+    """ 
+    def __init__(self,*args,**kwargs):
+        self.master_uri = kwargs.get('master_uri','localhost')
+        self.client = xmlrpclib.ServerProxy(self.master_uri)
+
+    def __getattr__(self,name):
+        """
+        Just a proxy method 
+        """
+        return getattr(self.client,name)
+
+
