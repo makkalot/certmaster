@@ -17,16 +17,23 @@ BROKER_PORT=5672
 BROKER_USER="guest"
 BROKER_PASS="guest"
 
+CERTMASTER_CONFIG = "/etc/certmaster/certmaster.conf"
 class QpidConnection(object):
     """
     A simple Qpid connection
     """
     
-    def __init__(self,broker=None,broker_port=None,broker_user=None,broker_pass=None,*args,**kwargs):
-        self.broker = broker or BROKER
-        self.broker_port = broker_port or BROKER_PORT
-        self.broker_user = broker_user or BROKER_USER
-        self.broker_pass = broker_pass or BROKER_PASS
+    def __init__(self,conf_file = None,broker=None,broker_port=None,broker_user=None,broker_pass=None,*args,**kwargs):
+        if not conf_file:
+            self.config = read_config(CERTMASTER_CONFIG, CMConfig)
+        else:
+            self.config = read_config(conf_file, CMConfig)
+
+
+        self.broker = broker or self.config.broker or BROKER
+        self.broker_port = broker_port or self.config.broker_port or BROKER_PORT
+        self.broker_user = broker_user or self.config.broker_user or BROKER_USER
+        self.broker_pass = broker_pass or self.config.broker_pass BROKER_PASS
        
         #set Up a logger
         self.logger = log.Logger().logger
@@ -66,21 +73,24 @@ class BaseQpidCertmasterServer(QpidConnection):
 
     def __init__(self,*args,**kwargs):
         super(BaseQpidCertmasterServer,self).__init__(*args,**kwargs)
+        #you can set Up the queue dynamically
+        self.server_queue = kwargs.get('server_queue',QUEUE_NAME)
+        self.binding_key = self.server_queue
 
-    
+
     def serve(self):
-        self.session.queue_declare(queue=self.QUEUE_NAME, exclusive=True)
-        self.session.exchange_bind(exchange="amq.direct", queue=self.QUEUE_NAME, binding_key=self.BINDING_KEY)
+        self.session.queue_declare(queue=self.server_queue, exclusive=True)
+        self.session.exchange_bind(exchange="amq.direct", queue=self.server_queue, binding_key=self.binding_key)
 
         local_queue_name = self.LOCAL_QUEUE
-        self.session.message_subscribe(queue=self.QUEUE_NAME, destination=local_queue_name)
+        self.session.message_subscribe(queue=self.server_queue, destination=local_queue_name)
 
         queue = self.session.incoming(local_queue_name)
         queue.start()
         #declare a method to handle the incoming output
         queue.listen(self.handle_result)
         
-        self.logger.info("Certmaster starts serving on queue :%s "%(self.QUEUE_NAME))
+        self.logger.info("Certmaster starts serving on queue :%s "%(self.server_queue))
         import time
         while self.is_connection_open():
             #listen here for incoming messages
