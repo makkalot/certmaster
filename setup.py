@@ -37,6 +37,9 @@ if __name__ == "__main__":
                 package_dir = {"%s" % NAME: "%s" % NAME
                 },
 		packages = ["%s" % NAME,
+                    "%s/connection" % NAME,
+                    "%s/connection/qpid" % NAME,
+                    "%s/connection/xmlrpc" % NAME,
                 ],
                 data_files = [(initpath, ["init-scripts/certmaster"]),
                               (etcpath,  ["etc/minion.conf"]),
