@@ -29,6 +29,11 @@ class CMConfig(BaseConfig):
     sync_certs = BoolOption(False)
     peering = BoolOption(True)
     peerroot =  Option('/var/lib/certmaster/peers')
+    broker = Option('')
+    broker_port = Option('')
+    broker_user = Option('')
+    broker_pass = Option('')
+
 
 class MinionConfig(BaseConfig):
     log_level = Option('INFO')
