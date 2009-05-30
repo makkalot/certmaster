@@ -10,6 +10,10 @@ from qpid.queue import Empty
 import utils as ut
 import simplejson as json
 import certmaster.logger as log
+from certmaster.config import read_config
+from certmaster.commonconfig import CMConfig
+
+
 #  Set parameters for login
 
 BROKER="127.0.0.1"
@@ -33,7 +37,7 @@ class QpidConnection(object):
         self.broker = broker or self.config.broker or BROKER
         self.broker_port = broker_port or self.config.broker_port or BROKER_PORT
         self.broker_user = broker_user or self.config.broker_user or BROKER_USER
-        self.broker_pass = broker_pass or self.config.broker_pass BROKER_PASS
+        self.broker_pass = broker_pass or self.config.broker_pass or BROKER_PASS
        
         #set Up a logger
         self.logger = log.Logger().logger
@@ -74,7 +78,7 @@ class BaseQpidCertmasterServer(QpidConnection):
     def __init__(self,*args,**kwargs):
         super(BaseQpidCertmasterServer,self).__init__(*args,**kwargs)
         #you can set Up the queue dynamically
-        self.server_queue = kwargs.get('server_queue',QUEUE_NAME)
+        self.server_queue = kwargs.get('server_queue',self.QUEUE_NAME)
         self.binding_key = self.server_queue
 
 
@@ -111,8 +115,11 @@ class BaseQpidCertmasterServer(QpidConnection):
         
         self.logger.info("Certmaster recieved request from %s with message %s"%(reply_to["routing_key"],content))
         #call the custom handle
-        return_result = json.dumps(self.handle_custom_result(content))
+        try:
+            return_result = json.dumps(self.handle_custom_result(content))
         #transfer the stuff back to client
+        except Exception,e:
+            return_result = json.dumps(str(e))
         props = self.session.delivery_properties(routing_key=reply_to["routing_key"]) 
         self.session.message_transfer(destination=reply_to["exchange"], message=Message(props,return_result))
         self.logger.info("Certmaster answered the  request from %s with message %s"%(reply_to["routing_key"],return_result))
