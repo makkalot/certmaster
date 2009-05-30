@@ -2,7 +2,6 @@ import certmaster.codes as codes
 import certmaster.logger as logger
 from certmaster.config import read_config
 from certmaster.commonconfig import CMConfig
-from certmaster.commonconfig import CMConfig
 
 from certmaster.certmaster import CertMaster
 from certmaster.connection.common  import ConnectionInterface,ClientInterface
@@ -32,7 +31,7 @@ class XmlRpcConnection(ConnectionInterface):
         #will be set later
         self.__server_instance = None
     
-    def set_server(self,*args,**kwargs):
+    def __set_server(self,*args,**kwargs):
         """
         Set the server instance here
         """
@@ -50,7 +49,7 @@ class XmlRpcConnection(ConnectionInterface):
         self.certmaster.audit_logger.logger.info("certmaster started on %s:%s"%(listen_addr,str(listen_port)))
 
 
-    def set_callables(self,*args,**kwargs):
+    def __set_callables(self,*args,**kwargs):
         """
         Set here callables ...
         """
@@ -64,32 +63,16 @@ class XmlRpcConnection(ConnectionInterface):
         """
         A private method for passing the conatiner reference to contaniee 
         """
-        self.certmaster.set_chandler(self)
-
-    def load_server_modules(self):
-        """
-        In that module you will be loading the modules
-        that will be executed during remote calls
-        """
-        pass
-    
-    def pre_handle_method_call(self,method,params):
-        """
-        When you want to customize the behaviour of method 
-        call that is the the place you should touch ...
-        """
-        pass 
+        self.certmaster.set_chandler(self) 
     
     def start_serving(self):
         """
         Start the serving here
         """
         #set the certmaster
-        self.set_callables()
-        #load the modules
-        self.load_server_modules()
+        self.__set_callables()
         #set the server stuff
-        self.set_server()
+        self.__set_server()
         #start serving 
         self.certmaster.logger.info("certmaster xmlrpc server serving")
         self.__server_instance.serve_forever()
