@@ -1,3 +1,4 @@
+import certmaster.logger as logger
 class ConnectionInterface(object):
     
     def __init__(self,*args,**kwargs):
@@ -7,24 +8,16 @@ class ConnectionInterface(object):
         self.logger = logger.Logger().logger
         self.audit_logger = logger.AuditLogger()
     
-    def load_server_modules(self):
+    def pre_handle_method_call(self,method,params):
         """
-        In that module you will be loading the modules
-        that will be executed during remote calls
+        When you want to customize the behaviour of method
+        call that is the the place you should touch ...
         """
         pass
-
-
+    
     def start_serving(self):
         """
         Start the serving here
-        """
-        pass
-
-    
-    def stop_server(self):
-        """
-        Stop the serving here
         """
         pass
 
@@ -38,21 +31,19 @@ class ClientInterface(object):
         self.audit_logger = logger.AuditLogger()
     
 
-class QpidConnection(ConnectionInterface):
-    pass
-
 
 CERTMASTER_CONFIG = "/etc/certmaster/certmaster.conf"
 from certmaster.commonconfig import CMConfig
 from certmaster.config import read_config
 
-def choose_current_connection(conf_file=None,force_connection=None,cm_instance=None,port=None,listen_addr=None):
+def choose_current_connection(conf_file=None,force_connection=None,cm_instance=None,port=None,listen_addr=None,server_queue=None):
     """
     Choses the right connection from conf file and starts
     it according to that stuff ....
     """
     from certmaster.connection.xmlrpc.connection import XmlRpcConnection
-    #from certmaster.connection.qpid.connection import XmlRpcConnection
+    from certmaster.connection.qpid.server import QpidRpcCertMaster
+    
     if not conf_file:
         config = read_config(CERTMASTER_CONFIG, CMConfig)
     else:
@@ -60,8 +51,7 @@ def choose_current_connection(conf_file=None,force_connection=None,cm_instance=N
     
     #sometimes you may need passing the connection yourself
     if force_connection:
-        print "Forcing the connection "
-        return force_connection(certmaster=cm_instance,port=port,listen_addr=listen_addr)
+        return force_connection(certmaster=cm_instance,port=port,listen_addr=listen_addr,server_queue=server_queue)
 
     connection = config.connection
     if not connection:
@@ -70,16 +60,17 @@ def choose_current_connection(conf_file=None,force_connection=None,cm_instance=N
     if connection == "xmlrpc":
         return XmlRpcConnection()
     elif connection == "qpid":
-        return XmlRpcConnection()
+        return QpidRpcCertMaster()
 
     return None
 
 
-def choose_current_client(conf_file=None,master_uri=None,force_connection=None):
+def choose_current_client(conf_file=None,master_uri=None,force_connection=None,queue=None):
     """
     Same as above but for client
     """
     from certmaster.connection.xmlrpc.connection import XmlRpcClient
+    from certmaster.connection.qpid.client import QpidRpcClient
 
     if not conf_file:
         config = read_config(CERTMASTER_CONFIG, CMConfig)
@@ -88,7 +79,7 @@ def choose_current_client(conf_file=None,master_uri=None,force_connection=None):
     
     #sometimes you may need passing the connection yourself
     if force_connection:
-        return force_connection(master_uri=master_uri)
+        return force_connection(master_uri=master_uri,queue=queue)
 
     connection = config.connection
     if not connection:
@@ -97,7 +88,7 @@ def choose_current_client(conf_file=None,master_uri=None,force_connection=None):
     if connection == "xmlrpc":
         return XmlRpcClient(master_uri=master_uri)
     elif connection == "qpid":
-        return XmlRpcClient(master_uri=master_uri)
+        return QpidRpcClient(queue=queue)
 
     return None
 
