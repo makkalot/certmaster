@@ -37,16 +37,12 @@ class QpidRpcClient(BaseQpidCertmasterClient):
         def __call__(self, *args):
             if not self.base:
                 raise AttributeError("something wrong here")
-            if len(self.base) < 2:
-                raise AttributeError("no method called: %s" % ".".join(self.base))
             
-            module = self.base[0]
-            method = ".".join(self.base[1:])
-        
-        #send the actual data there
-        return self.clientref.send_data(
+            method = self.base[0]
+            #send the actual data there
+            return self.clientref.send_data(
                 {
-                    'module':module,
+                    'module':None,
                     'method':method,
                     'args':args
                     },
