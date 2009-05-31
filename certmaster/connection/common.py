@@ -1,5 +1,5 @@
 import certmaster.logger as logger
-class ConnectionInterface(object):
+class ServerInterface(object):
     
     def __init__(self,*args,**kwargs):
         """
@@ -36,12 +36,12 @@ CERTMASTER_CONFIG = "/etc/certmaster/certmaster.conf"
 from certmaster.commonconfig import CMConfig
 from certmaster.config import read_config
 
-def choose_current_connection(conf_file=None,force_connection=None,cm_instance=None,port=None,listen_addr=None,server_queue=None):
+def choose_current_server(conf_file=None,force_connection=None,cm_instance=None,port=None,listen_addr=None,server_queue=None):
     """
     Choses the right connection from conf file and starts
     it according to that stuff ....
     """
-    from certmaster.connection.xmlrpc.connection import XmlRpcConnection
+    from certmaster.connection.xmlrpc.server import XmlRpcCertMaster
     from certmaster.connection.qpid.server import QpidRpcCertMaster
     
     if not conf_file:
@@ -58,7 +58,7 @@ def choose_current_connection(conf_file=None,force_connection=None,cm_instance=N
         connection = "xmlrpc"
 
     if connection == "xmlrpc":
-        return XmlRpcConnection()
+        return XmlRpcCertMaster()
     elif connection == "qpid":
         return QpidRpcCertMaster()
 
@@ -69,7 +69,7 @@ def choose_current_client(conf_file=None,master_uri=None,force_connection=None,q
     """
     Same as above but for client
     """
-    from certmaster.connection.xmlrpc.connection import XmlRpcClient
+    from certmaster.connection.xmlrpc.client import XmlRpcClient
     from certmaster.connection.qpid.client import QpidRpcClient
 
     if not conf_file:
