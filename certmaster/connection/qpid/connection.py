@@ -76,7 +76,7 @@ class BaseQpidServer(QpidConnection):
 
 
     def __init__(self,*args,**kwargs):
-        super(BaseQpidCertmasterServer,self).__init__(*args,**kwargs)
+        super(BaseQpidServer,self).__init__(*args,**kwargs)
         #you can set Up the queue dynamically
         self.server_queue = kwargs.get('server_queue',self.QUEUE_NAME)
         self.binding_key = self.server_queue
@@ -142,7 +142,7 @@ class BaseQpidClient(QpidConnection):
     CLIENT_QUEUE = "certmaster_client_%s_%s"
 
     def __init__(self,*args,**kwargs):
-        super(BaseQpidCertmasterClient,self).__init__(*args,**kwargs)
+        super(BaseQpidClient,self).__init__(*args,**kwargs)
         self.reply_to = None
 
     def __start_connection(self):

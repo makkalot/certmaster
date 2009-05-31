@@ -13,8 +13,8 @@ class QpidRpcCertMaster(ServerInterface,BaseQpidServer):
         A place to insert some initialization
         """
         
-        BaseQpidCertmasterServer.__init__(self,*args,**kwargs)
-        ConnectionInterface.__init__(self,*args,**kwargs)
+        BaseQpidServer.__init__(self,*args,**kwargs)
+        ServerInterface.__init__(self,*args,**kwargs)
 
         #the certmaster here
         self.certmaster=kwargs.get('certmaster',None)
