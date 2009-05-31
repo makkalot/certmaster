@@ -115,8 +115,7 @@ def get_hostname(talk_to_certmaster=True):
         ip = socket.gethostbyname(hostname)
     except:
         return hostname
-    if ip != "127.0.0.1":
-        return hostname
+    return hostname
 
 
 # FIXME: move to requestor module and also create a verbose mode
@@ -228,17 +227,18 @@ def run_triggers(ref, globber):
             raise codes.CMException, "certmaster trigger failed: %(file)s returns %(code)d" % { "file" : file, "code" : rc }
 
 
+
 def submit_csr_to_master(csr_file, master_uri):
     """"
     gets us our cert back from the certmaster.wait_for_cert() method
     takes csr_file as path location and master_uri
     returns Bool, str(cert), str(ca_cert)
     """
+    from connection.common import choose_current_client
 
     fo = open(csr_file)
     csr = fo.read()
-    s = xmlrpclib.ServerProxy(master_uri)
+    s = choose_current_client(queue=master_uri,master_uri=master_uri)
 
     # print "DEBUG: waiting for cert"
     return s.wait_for_cert(csr)
-              
