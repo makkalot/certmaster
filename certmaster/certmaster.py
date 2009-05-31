@@ -342,7 +342,7 @@ def excepthook(exctype, value, tracebackobj):
 
 
 def main(argv):
-    from certmaster.connection.common import choose_current_connection
+    from connection.common import choose_current_server
 
     sys.excepthook = excepthook  
     if "daemon" in argv or "--daemon" in argv:
@@ -350,7 +350,7 @@ def main(argv):
     else:
         print "serving...\n"
 
-    connection_handler = choose_current_connection()
+    connection_handler = choose_current_server()
     # just let exceptions bubble up for now
     connection_handler.start_serving()
 
