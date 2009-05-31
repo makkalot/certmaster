@@ -1,9 +1,9 @@
-from connection import BaseQpidCertmasterServer
-from certmaster.connection.common  import ConnectionInterface
+from connection import BaseQpidServer
+from certmaster.connection.common  import ServerInterface
 
 
 CERTMASTER_CONFIG = "/etc/certmaster/certmaster.conf"
-class QpidRpcCertMaster(ConnectionInterface,BaseQpidCertmasterServer):
+class QpidRpcCertMaster(ServerInterface,BaseQpidServer):
     """
     That one will get some objects that contains callables
     or dictionary that contain callables

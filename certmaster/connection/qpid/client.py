@@ -1,7 +1,7 @@
-from connection import BaseQpidCertmasterClient
+from connection import BaseQpidClient
 import utils
 
-class QpidRpcClient(BaseQpidCertmasterClient):
+class QpidRpcClient(BaseQpidClient):
     """
     The qpid client that sends commands via broker to server
     """

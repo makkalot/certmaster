@@ -65,7 +65,7 @@ class QpidConnection(object):
         self.logger.info("Client closing connection to broker %s:%s with username :%s"%(self.broker,self.broker_port,self.broker_user))
 
 
-class BaseQpidCertmasterServer(QpidConnection):
+class BaseQpidServer(QpidConnection):
     """
     The server side that waits on the Overlord part
     """
@@ -135,7 +135,7 @@ class BaseQpidCertmasterServer(QpidConnection):
         return self.conenction_status
 
 
-class BaseQpidCertmasterClient(QpidConnection):
+class BaseQpidClient(QpidConnection):
     """
     The client part which is on the minions
     """
