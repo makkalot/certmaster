@@ -33,6 +33,7 @@ class CMConfig(BaseConfig):
     broker_port = Option('')
     broker_user = Option('')
     broker_pass = Option('')
+    connection = Option('xmlrpc')
 
 
 class MinionConfig(BaseConfig):
