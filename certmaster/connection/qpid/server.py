@@ -1,5 +1,6 @@
 from connection import BaseQpidServer
 from certmaster.connection.common  import ServerInterface
+from certmaster.certmaster import CertMaster
 
 
 CERTMASTER_CONFIG = "/etc/certmaster/certmaster.conf"
