@@ -222,10 +222,12 @@ class BaseQpidClient(QpidConnection):
         if not queue_name.startswith('certmaster_'):
             queue_name = "certmaster_%s"%queue_name
 
-        if not self.reply_to:
-            self.__start_connection()
+        #everytime make a new one please
+        self.__start_connection()
         if return_result:
             return self.__send_request(data,queue_name)
         else:
             self.__send_request(data)
-
+        
+        #than close the stuff it is better that way
+        self.close_connection()
