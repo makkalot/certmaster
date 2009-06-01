@@ -119,6 +119,7 @@ class BaseQpidServer(QpidConnection):
             return_result = json.dumps(self.handle_custom_result(content))
         #transfer the stuff back to client
         except Exception,e:
+            self.logger.debug("Certmaster qpid server got an exception :%s"%str(e))
             return_result = json.dumps(str(e))
         props = self.session.delivery_properties(routing_key=reply_to["routing_key"]) 
         self.session.message_transfer(destination=reply_to["exchange"], message=Message(props,return_result))
@@ -173,7 +174,11 @@ class BaseQpidClient(QpidConnection):
         delivery_properties = self.session.delivery_properties(routing_key=queue_name)
         
         #sometimes we dont want to call the custom method just want to pass the stuff
-        to_send = json.dumps(self.send_custom_request(data))
+        try:
+            to_send = json.dumps(self.send_custom_request(data))
+        except Exception,e:
+            self.logger.debug("Certmaster qpid client got an exception :%s"%str(e))
+            to_send = json.dumps(str(e))
 
         #sending message
         self.session.message_transfer(destination="amq.direct", message=Message(message_properties, delivery_properties,to_send))
@@ -214,6 +219,9 @@ class BaseQpidClient(QpidConnection):
         That is the method toy should call when using that class
         """
         #set up your own queue
+        if not queue_name.startswith('certmaster_'):
+            queue_name = "certmaster_%s"%queue_name
+
         if not self.reply_to:
             self.__start_connection()
         if return_result:
