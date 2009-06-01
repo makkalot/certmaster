@@ -41,3 +41,4 @@ class MinionConfig(BaseConfig):
     certmaster = Option('certmaster')
     certmaster_port = IntOption(51235)
     cert_dir = Option('/etc/pki/certmaster')
+    connection = Option('xmlrpc')
