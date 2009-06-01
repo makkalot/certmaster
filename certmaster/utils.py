@@ -121,6 +121,7 @@ def get_hostname(talk_to_certmaster=True):
 # FIXME: move to requestor module and also create a verbose mode
 # prints to the screen for usage by /usr/bin/certmaster-request
 
+from connection.common import get_certmaster_adress
 def create_minion_keys(hostname=None):
     log = logger.Logger().logger
 
@@ -128,7 +129,8 @@ def create_minion_keys(hostname=None):
     config_file = '/etc/certmaster/minion.conf'
     config = read_config(config_file, MinionConfig)
     cert_dir = config.cert_dir
-    master_uri = 'http://%s:%s/' % (config.certmaster, config.certmaster_port)
+    
+    master_uri = get_certmaster_adress()
 
     hn = hostname
     if hn is None:
@@ -167,7 +169,9 @@ def create_minion_keys(hostname=None):
         try:
             # print "DEBUG: submitting CSR to certmaster: %s" % master_uri
             log.debug("submitting CSR: %s  to certmaster %s" % (csr_file, master_uri))
+            
             result, cert_string, ca_cert_string = submit_csr_to_master(csr_file, master_uri)
+
         except socket.gaierror, e:
             raise codes.CMException, "Could not locate certmaster at %s" % master_uri
 

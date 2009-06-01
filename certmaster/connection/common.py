@@ -92,4 +92,19 @@ def choose_current_client(conf_file=None,master_uri=None,force_connection=None,q
 
     return None
 
+MINION_CONF = '/etc/certmaster/minion.conf'
+from certmaster.commonconfig import MinionConfig
+def get_certmaster_adress():
+    """
+    An client util method
+    """
+
+    config = read_config(MINION_CONF, MinionConfig)
+    if config.connection == "xmlrpc":
+        return 'http://%s:%s/' % (config.certmaster, config.certmaster_port)
+    elif config.connection == "qpid":
+        return config.certmaster
+    else:
+        return None
+
 
